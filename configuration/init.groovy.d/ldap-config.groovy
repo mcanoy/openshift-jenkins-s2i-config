@@ -3,6 +3,7 @@ import hudson.security.*
 import org.jenkinsci.plugins.*
 import hudson.security.FullControlOnceLoggedInAuthorizationStrategy
 
+def env = System.getenv();
 
 String server = env['LDAP_SERVER'];
 String rootDN = env['LDAP_ROOT_DN'];
