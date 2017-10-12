@@ -7,7 +7,7 @@ import hudson.plugins.sonar.model.TriggersConfig
 import java.util.logging.Logger
 import static hudson.plugins.sonar.utils.SQServerVersions.SQ_5_3_OR_HIGHER
 
-private final Logger LOG = Logger.getLogger("LABS")
+final Logger LOG = Logger.getLogger("LABS")
 
 LOG.info( 'running configure-jenkins.groovy' )
 
