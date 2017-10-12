@@ -61,6 +61,7 @@ if (rc == 200) {
         "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", ""
     )
     sonarConfig.setInstallations(jenkins)
+    sonarConfig.save()
 } else {
     println("Request failed: ${rc}")
     println(generateToken.getErrorStream().getText())
