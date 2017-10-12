@@ -1,11 +1,22 @@
 #!/usr/bin/env groovy
 import jenkins.model.*
 import com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView
+import groovy.json.JsonSlurper
+import hudson.plugins.sonar.SonarInstallation
+import hudson.plugins.sonar.model.TriggersConfig
+import static hudson.plugins.sonar.utils.SQServerVersions.SQ_5_3_OR_HIGHER
 
 java.util.logging.Logger.getLogger("LABS").info( 'running configure-jenkins.groovy' )
 
+def owner = null;
+
 // delete default OpenShift job
-Jenkins.instance.items.findAll{ job -> job.name == 'OpenShift Sample'}.each{ job -> job.delete() }
+Jenkins.instance.items.findAll {
+  job -> job.name == 'OpenShift Sample'
+}.each {
+  job.
+  job -> job.delete()
+}
 
 // create a default build monitor view that includes all jobs
 // https://wiki.jenkins-ci.org/display/JENKINS/Build+Monitor+Plugin
@@ -13,6 +24,47 @@ if ( Jenkins.instance.views.findAll{ view -> view instanceof com.smartcodeltd.je
   view = new BuildMonitorView('Build Monitor','Build Monitor')
   view.setIncludeRegex('.*')
   Jenkins.instance.addView(view)
+}
+
+hudson.plugins.sonar.SonarPublisher sonarPublisher = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarPublisher')
+
+def sonarConfig = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarGlobalConfiguration')
+
+def tokenName = 'Jenkins'
+
+def sonarHost = "http://sonarqube:9000"
+
+def revokeToken = new URL("${sonarHost}/api/user_tokens/revoke").openConnection()
+def message = "name=Jenkins&login=admin"
+revokeToken.setRequestMethod("POST")
+revokeToken.setDoOutput(false)
+revokeToken.setRequestProperty("Accept", "application/json")
+def authString = "admin:admin".bytes.encodeBase64().toString()
+def rc = revokeToken.getResponseCode()
+
+def generateToken = new URL("${sonarHost}/api/user_tokens/generate").openConnection()
+message = "name=${tokenName}&login=admin"
+generateToken.setRequestMethod("POST")
+generateToken.setDoOutput(true)
+generateToken.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+generateToken.setRequestProperty("Authorization", "Basic ${authString}")
+generateToken.getOutputStream().write(message.getBytes("UTF-8"))
+rc = generateToken.getResponseCode()
+
+def token = null
+
+if (rc == 200) {
+    def jsonBody = generateToken.getInputStream().getText()
+    def jsonParser = new JsonSlurper()
+    def data = jsonParser.parseText(jsonBody)
+    token = data.token
+    SonarInstallation jenkins = new SonarInstallation(
+        "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", ""
+    )
+    sonarConfig.setInstallations(jenkins)
+} else {
+    println("Request failed: ${rc}")
+    println(generateToken.getErrorStream().getText())
 }
 
 // support custom CSS for htmlreports
