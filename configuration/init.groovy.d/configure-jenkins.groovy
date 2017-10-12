@@ -14,7 +14,6 @@ def owner = null;
 Jenkins.instance.items.findAll {
   job -> job.name == 'OpenShift Sample'
 }.each {
-  job.
   job -> job.delete()
 }
 
