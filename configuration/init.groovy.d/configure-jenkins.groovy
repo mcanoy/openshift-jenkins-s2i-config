@@ -4,12 +4,14 @@ import com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView
 import groovy.json.JsonSlurper
 import hudson.plugins.sonar.SonarInstallation
 import hudson.plugins.sonar.model.TriggersConfig
+
+import java.util.logging.Level
 import java.util.logging.Logger
 import static hudson.plugins.sonar.utils.SQServerVersions.SQ_5_3_OR_HIGHER
 
-final Logger LOG = Logger.getLogger("LABS")
+final def LOG = Logger.getLogger("LABS")
 
-LOG.info( 'running configure-jenkins.groovy' )
+LOG.log(Level.INFO,  'running configure-jenkins.groovy' )
 
 try {
     // delete default OpenShift job
@@ -19,7 +21,7 @@ try {
         job -> job.delete()
     }
 } catch (NullPointerException npe) {
-   LOG.info('Failed to delete sample job', npe)
+   LOG.log(Level.INFO, 'Failed to delete sample job', npe)
 }
 // create a default build monitor view that includes all jobs
 // https://wiki.jenkins-ci.org/display/JENKINS/Build+Monitor+Plugin
@@ -29,14 +31,14 @@ if ( Jenkins.instance.views.findAll{ view -> view instanceof com.smartcodeltd.je
   Jenkins.instance.addView(view)
 }
 
-LOG.info('Get SonarQube config')
+LOG.log(Level.INFO, 'Get SonarQube config')
 def sonarConfig = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarGlobalConfiguration')
 
 def tokenName = 'Jenkins'
 
 def sonarHost = "http://sonarqube:9000"
 
-LOG.info('Delete existing SonarQube Jenkins token')
+LOG.log(Level.INFO, 'Delete existing SonarQube Jenkins token')
 def revokeToken = new URL("${sonarHost}/api/user_tokens/revoke").openConnection()
 def message = "name=Jenkins&login=admin"
 revokeToken.setRequestMethod("POST")
@@ -45,7 +47,7 @@ revokeToken.setRequestProperty("Accept", "application/json")
 def authString = "admin:admin".bytes.encodeBase64().toString()
 def rc = revokeToken.getResponseCode()
 
-LOG.info('Generate new auth token for SonarQube/Jenkins integration')
+LOG.log(Level.INFO, 'Generate new auth token for SonarQube/Jenkins integration')
 def generateToken = new URL("${sonarHost}/api/user_tokens/generate").openConnection()
 message = "name=${tokenName}&login=admin"
 generateToken.setRequestMethod("POST")
@@ -58,7 +60,7 @@ rc = generateToken.getResponseCode()
 def token = null
 
 if (rc == 200) {
-    LOG.info('Successfully generate SonarQube auth token')
+    LOG.log(Level.INFO, 'Successfully generate SonarQube auth token')
     def jsonBody = generateToken.getInputStream().getText()
     def jsonParser = new JsonSlurper()
     def data = jsonParser.parseText(jsonBody)
@@ -69,10 +71,10 @@ if (rc == 200) {
     sonarConfig.setInstallations(jenkins)
     sonarConfig.setBuildWrapperEnabled(true)
     sonarConfig.save()
-    LOG.info('SonarQube plugin configuration saved')
+    LOG.log(Level.INFO, 'SonarQube plugin configuration saved')
 } else {
-    LOG.info("Request failed: ${rc}")
-    LOG.info(generateToken.getErrorStream().getText())
+    LOG.log(Level.INFO, "Request failed: ${rc}")
+    LOG.log(Level.INFO, generateToken.getErrorStream().getText())
 }
 
 // support custom CSS for htmlreports
