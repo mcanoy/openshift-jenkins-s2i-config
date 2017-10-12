@@ -68,7 +68,7 @@ if (rc == 200) {
     def data = jsonParser.parseText(jsonBody)
     token = data.token
     SonarInstallation sonarInst = new SonarInstallation(
-        "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", ""
+        "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", "", ""
     )
     sonarConfig.setInstallations(sonarInst)
     sonarConfig.setBuildWrapperEnabled(true)
