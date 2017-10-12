@@ -4,9 +4,10 @@ import com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView
 import groovy.json.JsonSlurper
 import hudson.plugins.sonar.SonarInstallation
 import hudson.plugins.sonar.model.TriggersConfig
+import java.util.logging.Logger
 import static hudson.plugins.sonar.utils.SQServerVersions.SQ_5_3_OR_HIGHER
 
-private final Logger LOG = java.util.logging.Logger.getLogger("LABS")
+private final Logger LOG = Logger.getLogger("LABS")
 
 LOG.info( 'running configure-jenkins.groovy' )
 
