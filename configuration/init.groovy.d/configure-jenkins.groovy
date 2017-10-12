@@ -25,8 +25,6 @@ if ( Jenkins.instance.views.findAll{ view -> view instanceof com.smartcodeltd.je
   Jenkins.instance.addView(view)
 }
 
-def sonarPublisher = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarPublisher')
-
 def sonarConfig = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarGlobalConfiguration')
 
 def tokenName = 'Jenkins'
