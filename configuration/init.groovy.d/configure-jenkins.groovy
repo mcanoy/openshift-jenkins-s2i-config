@@ -38,6 +38,7 @@ def tokenName = 'Jenkins'
 
 def sonarHost = "http://sonarqube:9000"
 
+// Make a POST request to delete any existing admin tokens named "Jenkins"
 LOG.log(Level.INFO, 'Delete existing SonarQube Jenkins token')
 def revokeToken = new URL("${sonarHost}/api/user_tokens/revoke").openConnection()
 def message = "name=Jenkins&login=admin"
@@ -49,6 +50,7 @@ revokeToken.setRequestProperty("Authorization", "Basic ${authString}")
 revokeToken.getOutputStream().write(message.getBytes("UTF-8"))
 def rc = revokeToken.getResponseCode()
 
+// Create a new admin token named "Jenkins" and capture the value
 LOG.log(Level.INFO, 'Generate new auth token for SonarQube/Jenkins integration')
 def generateToken = new URL("${sonarHost}/api/user_tokens/generate").openConnection()
 message = "name=${tokenName}&login=admin"
@@ -67,6 +69,8 @@ if (rc == 200) {
     def jsonParser = new JsonSlurper()
     def data = jsonParser.parseText(jsonBody)
     token = data.token
+
+    // Add the SonarQube server config to Jenkins
     SonarInstallation sonarInst = new SonarInstallation(
         "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", "", ""
     )
