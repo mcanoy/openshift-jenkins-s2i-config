@@ -42,9 +42,11 @@ LOG.log(Level.INFO, 'Delete existing SonarQube Jenkins token')
 def revokeToken = new URL("${sonarHost}/api/user_tokens/revoke").openConnection()
 def message = "name=Jenkins&login=admin"
 revokeToken.setRequestMethod("POST")
-revokeToken.setDoOutput(false)
+revokeToken.setDoOutput(true)
 revokeToken.setRequestProperty("Accept", "application/json")
 def authString = "admin:admin".bytes.encodeBase64().toString()
+revokeToken.setRequestProperty("Authorization", "Basic ${authString}")
+revokeToken.getOutputStream().write(message.getBytes("UTF-8"))
 def rc = revokeToken.getResponseCode()
 
 LOG.log(Level.INFO, 'Generate new auth token for SonarQube/Jenkins integration')
@@ -60,15 +62,15 @@ rc = generateToken.getResponseCode()
 def token = null
 
 if (rc == 200) {
-    LOG.log(Level.INFO, 'Successfully generate SonarQube auth token')
+    LOG.log(Level.INFO, 'Successfully generated SonarQube auth token')
     def jsonBody = generateToken.getInputStream().getText()
     def jsonParser = new JsonSlurper()
     def data = jsonParser.parseText(jsonBody)
     token = data.token
-    def jenkins = new SonarInstallation(
+    SonarInstallation sonarInst = new SonarInstallation(
         "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", ""
     )
-    sonarConfig.setInstallations(jenkins)
+    sonarConfig.setInstallations(sonarInst)
     sonarConfig.setBuildWrapperEnabled(true)
     sonarConfig.save()
     LOG.log(Level.INFO, 'SonarQube plugin configuration saved')
