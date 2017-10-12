@@ -25,7 +25,7 @@ if ( Jenkins.instance.views.findAll{ view -> view instanceof com.smartcodeltd.je
   Jenkins.instance.addView(view)
 }
 
-hudson.plugins.sonar.SonarPublisher sonarPublisher = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarPublisher')
+def sonarPublisher = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarPublisher')
 
 def sonarConfig = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarGlobalConfiguration')
 
@@ -57,7 +57,7 @@ if (rc == 200) {
     def jsonParser = new JsonSlurper()
     def data = jsonParser.parseText(jsonBody)
     token = data.token
-    SonarInstallation jenkins = new SonarInstallation(
+    def jenkins = new SonarInstallation(
         "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", ""
     )
     sonarConfig.setInstallations(jenkins)
