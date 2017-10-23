@@ -34,53 +34,55 @@ if ( Jenkins.instance.views.findAll{ view -> view instanceof com.smartcodeltd.je
 LOG.log(Level.INFO, 'Get SonarQube config')
 def sonarConfig = Jenkins.instance.getDescriptor('hudson.plugins.sonar.SonarGlobalConfiguration')
 
-def tokenName = 'Jenkins'
+if (System.getenv("OPENSHIFT_SONARQUBE")!=null) {
+    def tokenName = 'Jenkins'
 
-def sonarHost = "http://sonarqube:9000"
+    def sonarHost = "http://sonarqube:9000"
 
 // Make a POST request to delete any existing admin tokens named "Jenkins"
-LOG.log(Level.INFO, 'Delete existing SonarQube Jenkins token')
-def revokeToken = new URL("${sonarHost}/api/user_tokens/revoke").openConnection()
-def message = "name=Jenkins&login=admin"
-revokeToken.setRequestMethod("POST")
-revokeToken.setDoOutput(true)
-revokeToken.setRequestProperty("Accept", "application/json")
-def authString = "admin:admin".bytes.encodeBase64().toString()
-revokeToken.setRequestProperty("Authorization", "Basic ${authString}")
-revokeToken.getOutputStream().write(message.getBytes("UTF-8"))
-def rc = revokeToken.getResponseCode()
+    LOG.log(Level.INFO, 'Delete existing SonarQube Jenkins token')
+    def revokeToken = new URL("${sonarHost}/api/user_tokens/revoke").openConnection()
+    def message = "name=Jenkins&login=admin"
+    revokeToken.setRequestMethod("POST")
+    revokeToken.setDoOutput(true)
+    revokeToken.setRequestProperty("Accept", "application/json")
+    def authString = "admin:admin".bytes.encodeBase64().toString()
+    revokeToken.setRequestProperty("Authorization", "Basic ${authString}")
+    revokeToken.getOutputStream().write(message.getBytes("UTF-8"))
+    def rc = revokeToken.getResponseCode()
 
 // Create a new admin token named "Jenkins" and capture the value
-LOG.log(Level.INFO, 'Generate new auth token for SonarQube/Jenkins integration')
-def generateToken = new URL("${sonarHost}/api/user_tokens/generate").openConnection()
-message = "name=${tokenName}&login=admin"
-generateToken.setRequestMethod("POST")
-generateToken.setDoOutput(true)
-generateToken.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-generateToken.setRequestProperty("Authorization", "Basic ${authString}")
-generateToken.getOutputStream().write(message.getBytes("UTF-8"))
-rc = generateToken.getResponseCode()
+    LOG.log(Level.INFO, 'Generate new auth token for SonarQube/Jenkins integration')
+    def generateToken = new URL("${sonarHost}/api/user_tokens/generate").openConnection()
+    message = "name=${tokenName}&login=admin"
+    generateToken.setRequestMethod("POST")
+    generateToken.setDoOutput(true)
+    generateToken.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+    generateToken.setRequestProperty("Authorization", "Basic ${authString}")
+    generateToken.getOutputStream().write(message.getBytes("UTF-8"))
+    rc = generateToken.getResponseCode()
 
-def token = null
+    def token = null
 
-if (rc == 200) {
-    LOG.log(Level.INFO, 'Successfully generated SonarQube auth token')
-    def jsonBody = generateToken.getInputStream().getText()
-    def jsonParser = new JsonSlurper()
-    def data = jsonParser.parseText(jsonBody)
-    token = data.token
+    if (rc == 200) {
+        LOG.log(Level.INFO, 'Successfully generated SonarQube auth token')
+        def jsonBody = generateToken.getInputStream().getText()
+        def jsonParser = new JsonSlurper()
+        def data = jsonParser.parseText(jsonBody)
+        token = data.token
 
-    // Add the SonarQube server config to Jenkins
-    SonarInstallation sonarInst = new SonarInstallation(
-        "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", "", ""
-    )
-    sonarConfig.setInstallations(sonarInst)
-    sonarConfig.setBuildWrapperEnabled(true)
-    sonarConfig.save()
-    LOG.log(Level.INFO, 'SonarQube plugin configuration saved')
-} else {
-    LOG.log(Level.INFO, "Request failed: ${rc}")
-    LOG.log(Level.INFO, generateToken.getErrorStream().getText())
+        // Add the SonarQube server config to Jenkins
+        SonarInstallation sonarInst = new SonarInstallation(
+            "Sonar", sonarHost, SQ_5_3_OR_HIGHER, token, "", "", "", "", "", new TriggersConfig(), "", "", ""
+        )
+        sonarConfig.setInstallations(sonarInst)
+        sonarConfig.setBuildWrapperEnabled(true)
+        sonarConfig.save()
+        LOG.log(Level.INFO, 'SonarQube plugin configuration saved')
+    } else {
+        LOG.log(Level.INFO, "Request failed: ${rc}")
+        LOG.log(Level.INFO, generateToken.getErrorStream().getText())
+    }
 }
 
 // support custom CSS for htmlreports
