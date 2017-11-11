@@ -1,18 +1,18 @@
-# openshift-jenkins-s2i-config
-Config repo used to build a customized OpenShift Jenkins image using [source to image (S2I)](https://github.com/openshift/source-to-image). The base OpenShift Jenkins S2I can be found at `registry.access.redhat.com/openshift3/jenkins-1-rhel7`.
+# Innovation Labs Jenkins Master Configuration
+This repo is used to build a customized OpenShift Jenkins 2 image with [source to image (S2I)](https://github.com/openshift/source-to-image). The base OpenShift Jenkins S2I can be found at `registry.access.redhat.com/openshift3/jenkins-2-rhel7`. The resulting image is a Jenkins master, and should be used in a master / slaves architecture. This image is configured to provide slaves as k8s pods via the [k8s Jenkins plugin](https://docs.openshift.com/container-platform/3.5/using_images/other_images/jenkins.html#using-the-jenkins-kubernetes-plug-in-to-run-jobs). Thus, this repo doesn't define any build tools or the like, as they are the responsibility of the slaves.
 
-## Usage
-While we could use S2I locally, we always expect this configuration to used with OpenShift, which can be done with the following command: `oc new-app openshift/jenkins~https://github.com/rht-labs/openshift-jenkins-s2i-config.git --name jenkins-master`
+It's advised to use this configuration in combination with the out of the box OpenShift Jenkins templates, as demonstrated in [this example](https://github.com/rht-labs/examples/tree/jenkins-ocp-templates/jenkins-ocp-templates).
 
-## Project Layout
-Dictated by [the upstream documentation](https://github.com/openshift/jenkins/blob/master/README.md#installing-using-s2i-build) of the S2I base image.
+## How This Repo Works
 
-## Retrieving Plugin Inventory
-There is a [groovy helper script](helpers/writePluginFile.groovy) to retrieve this info. If you have [groovy installed](http://groovy-lang.org/download.html), you can run the script in the shell like a normal script bash or bat script. The script doesn't currently support CLI args, so you'll need to modify it directly. it leverages the pluginManager REST API and produces a `plugins.txt` in the working directory which you can move to the root directory if you like it.
+The directory structure is dictated by [OpenShift Jenkins S2I image](https://docs.openshift.com/container-platform/3.5/using_images/other_images/jenkins.html#jenkins-as-s2i-builder). In particular:
+
+- [plugins.txt](plugins.txt) is used to install plugins during the S2I build. If you want the details, here is the [S2I assemble script](https://github.com/openshift/jenkins/blob/master/2/contrib/s2i/assemble), which calls the [install jenkins plugins script](https://github.com/openshift/jenkins/blob/master/2/contrib/jenkins/install-plugins.sh).
+- files in the [configuration](configuration) directory will have comments describing exactly what they do
 
 ## Contributing
 
-See [the guide](https://github.com/rht-labs/api-design/blob/master/CONTRIBUTING.md)
+There are some [helpers](helpers/README.MD) to get configuration out of a running Jenkins. See [the guide](https://github.com/rht-labs/api-design/blob/master/CONTRIBUTING.md) for opening PRs/Issues.
 
 ### License
 [ASL 2.0](LICENSE)
