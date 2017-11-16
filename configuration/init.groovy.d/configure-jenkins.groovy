@@ -3,12 +3,14 @@ import jenkins.model.*
 import com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView
 import groovy.json.JsonSlurper
 import hudson.plugins.sonar.SonarInstallation
+import hudson.plugins.sonar.SonarRunnerInstallation
+import hudson.plugins.sonar.SonarRunnerInstaller
 import hudson.plugins.sonar.model.TriggersConfig
+import hudson.tools.InstallSourceProperty
 
 import java.util.logging.Level
 import java.util.logging.Logger
 import static hudson.plugins.sonar.utils.SQServerVersions.SQ_5_3_OR_HIGHER
-
 final def LOG = Logger.getLogger("LABS")
 
 LOG.log(Level.INFO,  'running configure-jenkins.groovy' )
@@ -78,6 +80,20 @@ if (System.getenv("OPENSHIFT_SONARQUBE")!=null) {
         sonarConfig.setInstallations(sonarInst)
         sonarConfig.setBuildWrapperEnabled(true)
         sonarConfig.save()
+
+        // Sonar Runner
+        // Source: http://pghalliday.com/jenkins/groovy/sonar/chef/configuration/management/2014/09/21/some-useful-jenkins-groovy-scripts.html
+        def inst = Jenkins.getInstance()
+
+        def sonarRunner = inst.getDescriptor("hudson.plugins.sonar.SonarRunnerInstallation")
+
+        def installer = new SonarRunnerInstaller("3.0.3.778")
+        def prop = new InstallSourceProperty([installer])
+        def sinst = new SonarRunnerInstallation("sonar-scanner-tool", "", [prop])
+        sonarRunner.setInstallations(sinst)
+
+        sonarRunner.save()
+
         LOG.log(Level.INFO, 'SonarQube plugin configuration saved')
     } else {
         LOG.log(Level.INFO, "Request failed: ${rc}")
